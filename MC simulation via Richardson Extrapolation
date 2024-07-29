@@ -66,7 +66,7 @@ def Heston_EuCall_Laplace(S0, r, nu0, kappa, lmbda, sigma_tilde, T, K, R):
     def integrand(u):
         return math.exp(-r * T) / math.pi * (f_tilde(R + complex(0, 1) * u) * chi(u - complex(0, 1) * R)).real
 
-    # integration to obtain the option price (cf. (7.9))
+    # integration to obtain the option price 
     V0 = integrate.quad(integrand, 0, 50)
     return V0[0]
 
