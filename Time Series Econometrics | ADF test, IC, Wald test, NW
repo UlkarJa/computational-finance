@@ -1,0 +1,202 @@
+% =========================== Ulkar Jafarova 
+
+% ===========================   Question 1   ===============================
+clear; clc;
+
+% Import the dataset from 'HAdata.xlsx'
+data = readtable('HAdata.xlsx');
+
+% Create a figure with two subplots arranged vertically
+figure;
+
+% First subplot for GDP
+subplot(2, 1, 1);
+% Plot GDP against time
+plot(data.Quarterly, data.GDP, 'LineWidth', 1.5);
+ylabel('GDP'); % Label for y-axis
+title('Time Series of GDP'); % Title for the subplot
+grid on;
+
+% Second subplot for SPREAD
+subplot(2, 1, 2);
+% Plot SPREAD against time
+plot(data.Quarterly, data.SPREAD, 'LineWidth', 1.5);
+ylabel('SPREAD'); % Label for y-axis
+xlabel('Quarterly'); % Label for x-axis
+title('Time Series of SPREAD'); % Title for the subplot
+grid on;
+
+% ===========================   Question 2   ===============================
+% ====================== ADF Test for All Variables =======================
+maxLag = 10; % Maximum lag length for the ADF test 
+
+% Perform ADF test for GDP
+varGDP = data.GDP; % Use the original GDP variable for the test
+
+% Ensure the data is real and finite by removing non-finite values
+varGDP = varGDP(isfinite(varGDP));
+
+% ADF without intercept and trend
+[h_AR, pVal_AR] = adftest(varGDP, 'model', 'AR', 'lags', 1:maxLag);
+% ADF with intercept
+[h_ARD, pVal_ARD] = adftest(varGDP, 'model', 'ARD', 'lags', 1:maxLag);
+% ADF with intercept and trend
+[h_TS, pVal_TS] = adftest(varGDP, 'model', 'TS', 'lags', 1:maxLag);
+
+% Display results for GDP
+results_GDP = table((1:maxLag)', pVal_AR', pVal_ARD', pVal_TS', ...
+    'VariableNames', ["Lags", "pVal_AR", "pVal_ARD", "pVal_TS"]);
+disp('Augmented Dickey-Fuller Tests for GDP (p-values)');
+disp(results_GDP);
+
+% Perform ADF test for SPREAD
+varSPREAD = data.SPREAD; % Use the original SPREAD variable for the test
+
+% Ensure the data is real and finite by removing non-finite values
+varSPREAD = varSPREAD(isfinite(varSPREAD));
+
+% ADF without intercept and trend
+[h_AR, pVal_AR] = adftest(varSPREAD, 'model', 'AR', 'lags', 1:maxLag);
+% ADF with intercept
+[h_ARD, pVal_ARD] = adftest(varSPREAD, 'model', 'ARD', 'lags', 1:maxLag);
+% ADF with intercept and trend
+[h_TS, pVal_TS] = adftest(varSPREAD, 'model', 'TS', 'lags', 1:maxLag);
+
+% Display results for SPREAD
+results_SPREAD = table((1:maxLag)', pVal_AR', pVal_ARD', pVal_TS', ...
+    'VariableNames', ["Lags", "pVal_AR", "pVal_ARD", "pVal_TS"]);
+disp('Augmented Dickey-Fuller Tests for SPREAD (p-values)');
+disp(results_SPREAD);
+
+% ===========================   Question 3   ===============================
+% ================== Determine p and q Using AIC and BIC ==================
+% Compute first difference of log(GDP)
+dlogGDP = diff(log(data.GDP)); % Compute first difference of log(GDP)
+varSPREAD = varSPREAD(2:end);
+
+% Initialize variables to store AIC and BIC values
+maxLag = 10; % Maximum lag to consider
+aicValues = zeros(maxLag, 1); % Initialize array for AIC values
+bicValues = zeros(maxLag, 1); % Initialize array for BIC values
+
+% Loop through each lag to fit ADL(p,p) models
+for p = 1:maxLag
+    % Create lagged variables for dlogGDP and SPREAD
+    lagged_dlogGDP = lagmatrix(dlogGDP, 1:p);
+    lagged_SPREAD = lagmatrix(varSPREAD, 0:p); % Note: SPREAD lag starts from 0 to include current value
+    
+    % Remove NaN rows from lagged_dlogGDP and lagged_SPREAD
+    X = [ones(length(dlogGDP)-p, 1) lagged_dlogGDP(p+1:end,:), lagged_SPREAD(p+1:end,:)];
+    
+    % Remove corresponding NaN rows from dlogGDP
+    Y = dlogGDP(p+1:end);
+    
+    % Fit OLS regression model
+    mdl = fitlm(X, Y);
+    
+    % Calculate AIC and BIC
+    aicValues(p) = mdl.ModelCriterion.AIC;
+    bicValues(p) = mdl.ModelCriterion.BIC;
+end
+
+% Plot AIC and BIC values to determine optimal lag length
+figure;
+plot(1:maxLag, aicValues, '-o', 'DisplayName', 'AIC'); % Plot AIC values
+hold on;
+plot(1:maxLag, bicValues, '-x', 'DisplayName', 'BIC'); % Plot BIC values
+xlabel('Lags'); % Label for x-axis
+ylabel('Information Criterion'); % Label for y-axis
+legend('show'); % Show legend
+title('AIC and BIC for Different Lags'); % Title of the plot
+hold off;
+
+% Find optimal lag based on minimum AIC and BIC values
+[~, optimalLagAIC] = min(aicValues); % Optimal lag according to AIC
+[~, optimalLagBIC] = min(bicValues); % Optimal lag according to BIC
+
+% Display optimal lag lengths
+disp(['Optimal lag according to AIC: ', num2str(optimalLagAIC)]);
+disp(['Optimal lag according to BIC: ', num2str(optimalLagBIC)]);
+
+
+
+% ===========================   Question 4   ===============================
+% ===== Estimate ADL(1,1) Model and Check Serial Correlation =====
+
+% Create lagged variables for dlogGDP and SPREAD - a matrix with # lags
+dlogGDP = diff(log(data.GDP)); % Compute first difference of log(GDP)
+varSPREAD = data.SPREAD(2:end); % Adjust SPREAD to match length of dlogGDP
+
+lagged_dlogGDP = lagmatrix(dlogGDP, 1); % Lagged dlogGDP (one lag)
+lagged_SPREAD = lagmatrix(varSPREAD, 0:1); % Current and one lagged value of SPREAD
+
+% Combine the variables into the design matrix
+X = [lagged_dlogGDP(2:end,:), lagged_SPREAD(2:end,:)];
+
+% Response variable
+Y = dlogGDP(2:end);
+
+% Remove rows with NaN values to ensure lengths match
+validIdx = ~any(isnan(X), 2);
+X_valid = X(validIdx, :);
+Y_valid = Y(validIdx);
+
+% Estimate ADL(1,1) model using ordinary least squares (OLS)
+mdl = fitlm(X_valid, Y_valid); % Fit linear model
+disp(mdl); % Display model summary
+
+% Extract residuals
+residuals = mdl.Residuals.Raw;
+
+% Plot autocorrelation of residuals
+figure;
+autocorr(residuals);
+title('Autocorrelation of Residuals');
+
+% Perform Ljung-Box Q-test
+[h, pValue, stat, cValue] = lbqtest(residuals);
+
+% Display Ljung-Box Q-test results
+fprintf('Ljung-Box Q-test results:\n');
+fprintf('H0 (no autocorrelation) rejected: %d\n', h);
+fprintf('p-value: %f\n', pValue);
+fprintf('Test statistic: %f\n', stat);
+fprintf('Critical value: %f\n', cValue);
+
+% ======== Re-estimate with Newey-West and Perform Wald Test ==========
+try
+    % Use hac function to estimate coefficients and covariance matrix with HAC standard errors
+    [CovB, se, beta] = hac(X_valid, Y_valid, 'type', 'HC'); 
+
+    % Print coefficients estimated with Newey-West standard errors
+    disp('Newey-West Coefficients:');
+    disp(beta); % Display estimated coefficients
+
+    % Ensure the dimensions of R, beta, and CovB are consistent for matrix multiplication
+    % Perform Wald test to test the null hypothesis H0: β2 = β3 = 0
+    % Note: Adjust the restriction matrix R to match the dimensions of beta
+    R = [0 1 0 0; 0 0 1 0]; % Restriction matrix for the null hypothesis β2 = β3 = 0
+    q = [0; 0]; % Null hypothesis value
+
+    % Debugging: Print dimensions
+    disp('Dimensions of R:');
+    disp(size(R));
+    disp('Dimensions of beta:');
+    disp(size(beta));
+    disp('Dimensions of CovB:');
+    disp(size(CovB));
+
+    % Ensure the dimensions of R, beta, and CovB are consistent for matrix multiplication
+    test_statistic = (R * beta - q)' * inv(R * CovB * R') * (R * beta - q); 
+    df = size(R, 1); % Degrees of freedom for the test
+    pWald = 1 - chi2cdf(test_statistic, df); % Calculate p-value of the Wald test
+
+    % Display Wald test statistic and p-value
+    disp(['Wald test statistic: ', num2str(test_statistic)]);
+    disp(['Wald test p-value: ', num2str(pWald)]);
+catch ME
+    disp('Error in HAC estimation:');
+    disp(ME.message);
+end
+
+
