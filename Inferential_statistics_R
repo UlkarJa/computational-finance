@@ -1,0 +1,409 @@
+---
+title: "Inferential Statistics Home Assignment 2024"
+---
+### Task 1 ### (3 points)
+
+Consider the sequence of functions \(f_n(x) = \frac{n x}{1 + n^2 x^2}\) for \( n = 1, 2, 3, \ldots \) and \( x \in [0,1] \). Your task is to explore whether this sequence converges to the function \(f(x) = 0\) as n increases. 
+
+Hint: You might find sapply() helpful for this task. However, there are different ways to find a solution to this problem.
+
+# a)
+
+Write a function in R that computes \( f_n(x) \) for given \( n \) and \( x \). Furthermore, write the target function \( f(x)=0 \).
+ 
+```{r}
+
+# Function to compute f_n(x)
+f_n <- function(n, x) {
+  # Compute the value of the function for given n and x
+  (n * x) / (1 + n^2 * x^2)
+}
+
+# Target function f(x) = 0
+f <- function(x) {
+  # Return 0 for any x
+  0
+}
+
+```
+ 
+Choose a few fixed points \( x = 0.1, 0.3, 0.5, 0.7, 0.9, 1.0 \) and values for \( n = c(1:100) \)  create a single plot showing the values of \( f_n(x) \) for the different fixed points as \( n \) increases. Add a meaningful tilte, labels for the y- and x-axis as well as a legend to the plot. 
+
+For which type of convergence are you testing with this task? Does convergence for this concept hold?
+
+```{r}
+# Define fixed points for x and sequence for n
+x_values <- c(0.1, 0.3, 0.5, 0.7, 0.9, 1.0)  # Fixed points
+n_values <- 1:100  # Sequence for n
+
+# Compute f_n(x) for different x and n
+# Use sapply to apply the function over the sequences of x and n
+fn_values <- sapply(x_values, function(x) sapply(n_values, function(n) f_n(n, x)))
+
+# Plot the results
+# Initialize the plot with the first set of values
+plot(n_values, fn_values[,1], type = "l", ylim = c(-0.1, 0.1), col = 1, 
+     main = "Convergence of f_n(x) to f(x) = 0",  # Title of the plot
+     xlab = "n", ylab = "f_n(x)",  # Labels for x and y axes
+     lwd = 2)  # Line width
+
+# Add lines for each of the remaining fixed points
+for (i in 2:length(x_values)) {
+  lines(n_values, fn_values[,i], col = i, lwd = 2)
+}
+
+# Add a legend to the plot
+legend("topright", legend = paste("x =", x_values), col = 1:length(x_values), lwd = 2)
+
+
+
+# Answer here
+
+# We are testing for pointwise convergence of the sequence of functions f_n(x) to the target function f(x) = 0.
+# Pointwise convergence holds if, for each fixed x, f_n(x) converges to f(x) as n increases.
+# From the plot, we can observe that for each fixed x, f_n(x) approaches 0 as n increases, indicating pointwise convergence.
+
+```
+
+# b) 
+
+Now you are supposed to create a sequence of plots showing \( f_n(x) \) for \( n = 10, 20, 50, 100, 200 \) over the interval \( x \in [0, 1] \) in one single figure. Add the target function \( f(x) = 0 \) to each plot. Add a meaningful tilte, labels for the y- and x-axis as well as a legend to the plots. 
+
+For which type of convergence are you testing with this task? Does convergence for this concept hold?
+
+Hint: You may use par(mfrow=c(3,2)) to create the figure.
+
+```{r}
+# Define n values for the sequence of plots
+n_values_b <- c(10, 20, 50, 100, 200)  # n values for which we will plot f_n(x)
+x_seq <- seq(0, 1, length.out = 100)  # Sequence of x values from 0 to 1
+
+# Set up the plotting area to have 3 rows and 2 columns of plots
+par(mfrow = c(3, 2))
+
+# Plot f_n(x) for different n values
+for (n in n_values_b) {
+  fn_values_seq <- sapply(x_seq, function(x) f_n(n, x))  # Compute f_n(x) for each x in x_seq
+  plot(x_seq, fn_values_seq, type = "l", col = "blue",
+       main = paste("f_n(x) for n =", n),  # Title of the plot
+       xlab = "x", ylab = "f_n(x)",  # Labels for x and y axes
+       ylim = c(-0.1, 0.1))  # Set y-axis limits
+  abline(h = 0, col = "red")  # Add the target function f(x) = 0 as a horizontal line
+  legend("topright", legend = c(paste("f_n(x) for n =", n), "f(x) = 0"), 
+         col = c("blue", "red"), lwd = 2)  # Add a legend
+}
+
+# Answer here:
+# We are testing for uniform convergence of the sequence of functions f_n(x) to the target function f(x) = 0.
+# Uniform convergence holds if f_n(x) converges to f(x) uniformly for all x in [0, 1].
+# From the plots, it can be observed that as n increases, f_n(x) gets closer to 0 uniformly over the interval [0, 1], indicating uniform convergence.
+
+```
+
+Choose an \( \epsilon > 0 \), for instance, \( \epsilon = 0.1 \). Plot \( |f_n(x) - f(x)| \) for \( n = 1, 2, 5, 10, 20 \) and show that there are always some values of \( x \) in \( [0, 1] \) such that \( |f_n(x) - f(x)| > \epsilon \) to support your argument in (b).
+
+What do the plots show and what can we conclude from this observation? 
+
+```{r}
+# Define epsilon
+epsilon <- 0.1
+
+# Define n values to plot
+n_values_c <- c(1, 2, 5, 10, 20)
+
+# Set up the plotting area to have 3 rows and 2 columns of plots
+par(mfrow = c(3, 2))
+
+# Plot |f_n(x) - f(x)| for different n values
+for (n in n_values_c) {
+  abs_diff <- sapply(x_seq, function(x) abs(f_n(n, x) - f(x)))  # Compute |f_n(x) - f(x)| for each x in x_seq
+  plot(x_seq, abs_diff, type = "l", col = "blue",
+       main = paste("|f_n(x) - f(x)| for n =", n),  # Title of the plot
+       xlab = "x", ylab = "|f_n(x) - f(x)|",  # Labels for x and y axes
+       ylim = c(0, max(abs_diff, epsilon)))  # Set y-axis limits
+  abline(h = epsilon, col = "red", lty = 2)  # Add a horizontal line at epsilon
+  legend("topright", legend = c(paste("|f_n(x) - f(x)| for n =", n), paste("epsilon =", epsilon)), 
+         col = c("blue", "red"), lwd = 2, lty = c(1, 2))  # Add a legend
+}
+
+
+#Answer here:
+# The plots show |f_n(x) - f(x)| for different values of n. As n increases, the values of |f_n(x) - f(x)| decrease uniformly over the interval [0, 1].
+# However, for smaller values of n, there are some values of x for which |f_n(x) - f(x)| exceeds epsilon (0.1), indicating that convergence is not yet uniform.
+# This observation supports the conclusion that as n increases, the sequence of functions f_n(x) converges uniformly to the target function f(x) = 0.
+# The red horizontal line at epsilon = 0.1 demonstrates that for larger n, |f_n(x) - f(x)| is consistently below epsilon for all x in [0, 1].
+
+```
+
+### Task 2 ### (3 Points) 
+
+Calculate Power for a permutation test
+
+For this problem, the following simple regression model is given \(y_i = \beta_0 + \beta_1 x_{1i} + \beta_2 x_{2i} + \varepsilon_i\), where \(\quad i = 1, 2, \ldots, n\), \( X_1 \sim \mathcal{U}(1,10)\),  \(X_2 \overset{\text{iid}}{\sim} \text{Bernoulli}(p)\),  and \(\varepsilon \sim \mathcal{N}(0,1)\). Further, you can assume that \( y_i = 1 + 0.2 x_{1i} + 0.1 x_{2i} + \varepsilon_i\). 
+
+Whenever using random numbers please use seed = 100.
+
+# a) Create Data
+
+Write two functions. The first should set up the model. The second should estimates the coeffcient $\beta_1$ and its t-value. You may use the $lm()$ function for this step. 
+
+```{r}
+# Set the seed for reproducibility
+set.seed(100)
+
+# Function to generate data based on the given model
+generate_data <- function(n, beta0 = 1, beta1 = 0.2, beta2 = 0.1) {
+  # Generate predictors
+  x1 <- runif(n, 1, 10)  # x1: n random numbers uniformly distributed between 1 and 10
+  x2 <- rbinom(n, 1, 0.5)  # x2: n random numbers from a Bernoulli distribution with p = 0.5
+  epsilon <- rnorm(n, 0, 1)  # epsilon: n random numbers from a normal distribution with mean 0 and standard deviation 1
+  
+  # Generate response variable y based on the regression model
+  y <- beta0 + beta1 * x1 + beta2 * x2 + epsilon
+  
+  # Combine y, x1, and x2 into a data frame
+  data.frame(y = y, x1 = x1, x2 = x2)
+}
+
+# Function to estimate the coefficient beta1 and its t-value
+estimate_beta1 <- function(data) {
+  # Fit the linear model using lm()
+  model <- lm(y ~ x1 + x2, data = data)
+  
+  # Extract the estimate and t-value for beta1 (coefficient of x1)
+  beta1_estimate <- summary(model)$coefficients["x1", "Estimate"]  # Extract the estimate for beta1
+  beta1_tvalue <- summary(model)$coefficients["x1", "t value"]  # Extract the t-value for beta1
+  
+  # Return the estimate and t-value as a named vector
+  c(Estimate = beta1_estimate, "t value" = beta1_tvalue)
+}
+
+# Example usage of the functions
+# Generate data for a sample size of n = 100
+data <- generate_data(100)
+
+# Estimate beta1 and its t-value using the generated data
+beta1_estimates <- estimate_beta1(data)
+
+# Print the estimated beta1 and its t-value
+print(beta1_estimates)
+
+
+
+```
+
+# b) Perform a permutation test
+
+Perform a permutation test for the effect of $X_1$ on $Y$. First, generate data with the function you just created. Then, randomly sample $Y$ 30 times and fit the model for each sampled dataset. For each sampled dataset, calculate the coefficient for $\beta_1$ and its t-value. Calculate the p-value as the proportion of times the absolute t-values from the sampled data are greater than or equal to the absolute t-value from the original data. Repeat these steps 100 times and calculate the share of rejections at the 5% level. Perform this process for different sample sizes, starting at 50 and increasing by 50 until reaching 500.
+
+```{r}
+
+# Set the seed for reproducibility
+set.seed(100)
+
+# Function to generate data based on the given model
+generate_data <- function(n, beta0 = 1, beta1 = 0.2, beta2 = 0.1) {
+  # Generate predictors
+  x1 <- runif(n, 1, 10)  # x1: n random numbers uniformly distributed between 1 and 10
+  x2 <- rbinom(n, 1, 0.5)  # x2: n random numbers from a Bernoulli distribution with p = 0.5
+  epsilon <- rnorm(n, 0, 1)  # epsilon: n random numbers from a normal distribution with mean 0 and standard deviation 1
+  
+  # Generate response variable y based on the regression model
+  y <- beta0 + beta1 * x1 + beta2 * x2 + epsilon  # Linear model
+  
+  # Combine y, x1, and x2 into a data frame
+  data.frame(y = y, x1 = x1, x2 = x2)
+}
+
+# Function to estimate the coefficient beta1 and its t-value
+estimate_beta1 <- function(data) {
+  # Fit the linear model using lm()
+  model <- lm(y ~ x1 + x2, data = data)
+  
+  # Extract the estimate and t-value for beta1 (coefficient of x1)
+  beta1_estimate <- summary(model)$coefficients["x1", "Estimate"]  # Extract the estimate for beta1
+  beta1_tvalue <- summary(model)$coefficients["x1", "t value"]  # Extract the t-value for beta1
+  
+  # Return the estimate and t-value as a named vector
+  c(Estimate = beta1_estimate, "t value" = beta1_tvalue)
+}
+
+# Function to perform a permutation test for the effect of X1 on Y
+permutation_test <- function(data, n_permutations = 30) {
+  # Estimate the original model and extract the absolute t-value for beta1
+  original_beta1 <- estimate_beta1(data)
+  original_tvalue <- abs(original_beta1["t value"])
+  
+  # Vector to store the t-values from the permuted datasets
+  permuted_tvalues <- numeric(n_permutations)
+  
+  # Perform the permutation test
+  for (i in 1:n_permutations) {
+    permuted_data <- data  # Copy the original data
+    permuted_data$y <- sample(data$y)  # Randomly permute the y values
+    permuted_beta1 <- estimate_beta1(permuted_data)  # Estimate beta1 for the permuted data
+    permuted_tvalues[i] <- abs(permuted_beta1["t value"])  # Store the absolute t-value
+  }
+  
+  # Calculate the p-value as the proportion of permuted t-values >= original t-value
+  p_value <- mean(permuted_tvalues >= original_tvalue)
+  
+  return(p_value)  # Return the calculated p-value
+}
+
+# Function to calculate the share of rejections at the 5% level for different sample sizes
+calculate_power <- function(sample_sizes, n_iterations = 100, alpha = 0.05) {
+  power_results <- numeric(length(sample_sizes))  # Initialize vector to store power results
+  
+  # Loop over each sample size
+  for (j in seq_along(sample_sizes)) {
+    n <- sample_sizes[j]  # Current sample size
+    rejections <- 0  # Initialize rejection counter
+    
+    # Perform the permutation test n_iterations times for the current sample size
+    for (i in 1:n_iterations) {
+      data <- generate_data(n)  # Generate data with the given sample size
+      p_value <- permutation_test(data)  # Perform permutation test
+      
+      # Check if the p-value is less than the significance level
+      if (p_value < alpha) {
+        rejections <- rejections + 1  # Count rejections at the 5% significance level
+      }
+    }
+    
+    # Calculate the power as the proportion of rejections
+    power_results[j] <- rejections / n_iterations
+  }
+  
+  return(power_results)  # Return the power results
+}
+
+# Define sample sizes
+sample_sizes <- seq(50, 500, by = 50)  # Sequence of sample sizes from 50 to 500, incremented by 50
+
+# Calculate power for each sample size
+power_results <- calculate_power(sample_sizes)
+
+# Print the power results as a data frame
+print(data.frame(Sample_Size = sample_sizes, Power = power_results))
+
+# Plot the power results
+plot(sample_sizes, power_results, type = "b", col = "blue", pch = 19,
+     xlab = "Sample Size", ylab = "Power",
+     main = "Power of Permutation Test for Different Sample Sizes")
+abline(h = 0.8, col = "red", lty = 2)  # Add a reference line at power = 0.8
+
+
+```
+
+# c) Compare test results
+
+Repeat the steps from task b), but set $beta_1 = 0$ for the data generation. Plot the results for the different samples sizes in the same plot as the results for taks b) and compare. Interpret the plot.
+
+```{r}
+# Set the seed for reproducibility
+set.seed(100)
+
+# Function to generate data with a flexible beta1 parameter
+generate_data <- function(n, beta0 = 1, beta1 = 0.2, beta2 = 0.1) {
+  # Generate predictors
+  x1 <- runif(n, 1, 10)  # x1: n random numbers uniformly distributed between 1 and 10
+  x2 <- rbinom(n, 1, 0.5)  # x2: n random numbers from a Bernoulli distribution with p = 0.5
+  epsilon <- rnorm(n, 0, 1)  # epsilon: n random numbers from a normal distribution with mean 0 and standard deviation 1
+  
+  # Generate response variable y based on the regression model
+  y <- beta0 + beta1 * x1 + beta2 * x2 + epsilon  # Linear model
+  
+  # Combine y, x1, and x2 into a data frame
+  data.frame(y = y, x1 = x1, x2 = x2)
+}
+
+# Function to estimate the coefficient beta1 and its t-value
+estimate_beta1 <- function(data) {
+  # Fit the linear model using lm()
+  model <- lm(y ~ x1 + x2, data = data)
+  
+  # Extract the estimate and t-value for beta1 (coefficient of x1)
+  beta1_estimate <- summary(model)$coefficients["x1", "Estimate"]  # Extract the estimate for beta1
+  beta1_tvalue <- summary(model)$coefficients["x1", "t value"]  # Extract the t-value for beta1
+  
+  # Return the estimate and t-value as a named vector
+  c(Estimate = beta1_estimate, "t value" = beta1_tvalue)
+}
+
+# Function to perform a permutation test for the effect of X1 on Y
+permutation_test <- function(data, n_permutations = 30) {
+  # Estimate the original model and extract the absolute t-value for beta1
+  original_beta1 <- estimate_beta1(data)
+  original_tvalue <- abs(original_beta1["t value"])
+  
+  # Vector to store the t-values from the permuted datasets
+  permuted_tvalues <- numeric(n_permutations)
+  
+  # Perform the permutation test
+  for (i in 1:n_permutations) {
+    permuted_data <- data  # Copy the original data
+    permuted_data$y <- sample(data$y)  # Randomly permute the y values
+    permuted_beta1 <- estimate_beta1(permuted_data)  # Estimate beta1 for the permuted data
+    permuted_tvalues[i] <- abs(permuted_beta1["t value"])  # Store the absolute t-value
+  }
+  
+  # Calculate the p-value as the proportion of permuted t-values >= original t-value
+  p_value <- mean(permuted_tvalues >= original_tvalue)
+  
+  return(p_value)  # Return the calculated p-value
+}
+
+# Function to calculate the share of rejections at the 5% level for different sample sizes
+calculate_power <- function(sample_sizes, n_iterations = 100, alpha = 0.05, beta1 = 0.2) {
+  power_results <- numeric(length(sample_sizes))  # Initialize vector to store power results
+  
+  # Loop over each sample size
+  for (j in seq_along(sample_sizes)) {
+    n <- sample_sizes[j]  # Current sample size
+    rejections <- 0  # Initialize rejection counter
+    
+    # Perform the permutation test n_iterations times for the current sample size
+    for (i in 1:n_iterations) {
+      data <- generate_data(n, beta1 = beta1)  # Generate data with the given sample size and beta1
+      p_value <- permutation_test(data)  # Perform permutation test
+      
+      # Check if the p-value is less than the significance level
+      if (p_value < alpha) {
+        rejections <- rejections + 1  # Count rejections at the 5% significance level
+      }
+    }
+    
+    # Calculate the power as the proportion of rejections
+    power_results[j] <- rejections / n_iterations
+  }
+  
+  return(power_results)  # Return the power results
+}
+
+# Define sample sizes
+sample_sizes <- seq(50, 500, by = 50)  # Sequence of sample sizes from 50 to 500, incremented by 50
+
+# Calculate power for beta1 = 0.2 (original scenario)
+power_results_beta1_0.2 <- calculate_power(sample_sizes, beta1 = 0.2)
+
+# Calculate power for beta1 = 0 (null scenario)
+power_results_beta1_0 <- calculate_power(sample_sizes, beta1 = 0)
+
+# Print the power results for both scenarios
+print(data.frame(Sample_Size = sample_sizes, Power_Beta1_0.2 = power_results_beta1_0.2, Power_Beta1_0 = power_results_beta1_0))
+
+# Plot the power results for both scenarios
+plot(sample_sizes, power_results_beta1_0.2, type = "b", col = "blue", pch = 19,
+     xlab = "Sample Size", ylab = "Power",
+     main = "Power of Permutation Test for Different Sample Sizes")
+lines(sample_sizes, power_results_beta1_0, type = "b", col = "red", pch = 17)
+legend("bottomright", legend = c("Beta1 = 0.2", "Beta1 = 0"), col = c("blue", "red"), pch = c(19, 17))
+abline(h = 0.8, col = "darkgray", lty = 2)  # Add a reference line at power = 0.8
+
+
+
+```
+
+
+
